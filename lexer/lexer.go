@@ -18,6 +18,15 @@ func New(input string) *Lexer {
 	return l
 }
 
+// peekChar read a char from buffer into l.ch
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	}
+
+	return l.input[l.readPosition]
+}
+
 // readChar read a char from buffer into l.ch
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
@@ -34,21 +43,49 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhiteSpaces()
 	switch l.ch {
 	case '=':
-		tok = token.Create(token.ASSIGN, l.ch)
+		if l.peekChar() == '=' {
+			// move ahead
+			l.readChar()
+			tok = token.CreateForStr(token.EQ, "==")
+		} else {
+			tok = token.CreateForByte(token.ASSIGN, l.ch)
+		}
 	case '+':
-		tok = token.Create(token.PLUS, l.ch)
+		tok = token.CreateForByte(token.PLUS, l.ch)
 	case ';':
-		tok = token.Create(token.SEMICOLON, l.ch)
+		tok = token.CreateForByte(token.SEMICOLON, l.ch)
 	case '(':
-		tok = token.Create(token.LPAREN, l.ch)
+		tok = token.CreateForByte(token.LPAREN, l.ch)
 	case ')':
-		tok = token.Create(token.RPAREN, l.ch)
+		tok = token.CreateForByte(token.RPAREN, l.ch)
 	case '{':
-		tok = token.Create(token.LBRACE, l.ch)
+		tok = token.CreateForByte(token.LBRACE, l.ch)
 	case '}':
-		tok = token.Create(token.RBRACE, l.ch)
+		tok = token.CreateForByte(token.RBRACE, l.ch)
 	case ',':
-		tok = token.Create(token.COMMA, l.ch)
+		tok = token.CreateForByte(token.COMMA, l.ch)
+	case '-':
+		tok = token.CreateForByte(token.MINUS, l.ch)
+	case '/':
+		tok = token.CreateForByte(token.SLASH, l.ch)
+	case '!':
+
+		if l.peekChar() == '=' {
+			// move ahead
+			l.readChar()
+			tok = token.CreateForStr(token.NOT_EQ, "!=")
+		} else {
+			tok = token.CreateForByte(token.BANG, l.ch)
+		}
+
+	case '>':
+		tok = token.CreateForByte(token.GT, l.ch)
+
+	case '<':
+		tok = token.CreateForByte(token.LT, l.ch)
+	case '*':
+		tok = token.CreateForByte(token.ASTERISK, l.ch)
+
 	case 0:
 		tok = token.Eof()
 
