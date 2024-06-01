@@ -24,6 +24,8 @@ func TestLet(t *testing.T) {
 
 	assert.NotNil(t, program, "program must be non nil")
 
+	checkParseErrors(t, p)
+
 	assert.Equal(t, 3, len(program.Statements), "must have  3 Statements")
 
 	tests := []struct {
@@ -63,4 +65,48 @@ func testLetStmnt(t *testing.T, s ast.Statement, name string) bool {
 		return false
 	}
 	return true
+}
+
+func checkParseErrors(t *testing.T, p *Parser) {
+	errors := p.Erors()
+
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser has %d errors", len(errors))
+
+	for _, m := range errors {
+		t.Errorf("Parse error: %s", m)
+	}
+	t.FailNow()
+}
+
+func TestReturnStatemnt(t *testing.T) {
+	input := `
+	return 5;
+	return 10;
+	return 993322;
+	`
+
+	l := lexer.New(input)
+
+	p := New(l)
+
+	program := p.ParseProgram()
+
+	assert.NotNil(t, program, "program must be non nil")
+
+	checkParseErrors(t, p)
+
+	assert.Equal(t, 3, len(program.Statements), "must have  3 Statements")
+
+	for _, stmnt := range program.Statements {
+		retStmnt, ok := stmnt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("statement is not a *ast.ReturnStatement. got %T", stmnt)
+		}
+
+		assert.Equal(t, "return", retStmnt.TokenLiteral(), "invalid token")
+	}
 }

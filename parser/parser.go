@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/NishanthSpShetty/monkey/ast"
 	"github.com/NishanthSpShetty/monkey/lexer"
 	"github.com/NishanthSpShetty/monkey/token"
@@ -10,10 +12,11 @@ type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
+	errors    []string
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{l: l, errors: []string{}}
 	p.nextToken()
 	p.nextToken()
 
@@ -23,6 +26,10 @@ func New(l *lexer.Lexer) *Parser {
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
+}
+
+func (p *Parser) Erors() []string {
+	return p.errors
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
@@ -45,7 +52,12 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
+	default:
+		p.errors = append(p.errors, fmt.Sprintf("invalid token: %s", string(p.curToken.Type)))
 	}
+
 	return nil
 }
 
@@ -74,6 +86,11 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	return stmnt
 }
 
+func (p *Parser) peekErrors(t token.TokenType) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
+}
+
 func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
@@ -87,5 +104,18 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	}
+	p.peekErrors(t)
 	return false
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	st := &ast.ReturnStatement{
+		Token:       p.curToken,
+		ReturnValue: nil,
+	}
+	for !p.curTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	//	fmt.Printf("%+v\n", stmnt)
+	return st
 }
