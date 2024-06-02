@@ -9,10 +9,12 @@ import (
 )
 
 func TestLet(t *testing.T) {
+	// FIXME
 	input := `
-	let x = 5;
-	let y = 10;
-	let foobar = 838383;
+	let x = 5
+	let y = 10
+	let foobar = 838383
+	let bar = foobar
 
 	`
 
@@ -26,24 +28,26 @@ func TestLet(t *testing.T) {
 
 	checkParseErrors(t, p)
 
-	assert.Equal(t, 3, len(program.Statements), "must have  3 Statements")
+	assert.Equal(t, 4, len(program.Statements), "must have  3 Statements")
 
 	tests := []struct {
 		expectedIdentifier string
+		val                interface{}
 	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
+		{"x", 5},
+		{"y", 10},
+		{"foobar", 838383},
+		{"bar", "foobar"},
 	}
 
 	for i, tt := range tests {
 		stmnt := program.Statements[i]
-		assert.True(t, testLetStmnt(t, stmnt, tt.expectedIdentifier), "let Statements must be valid")
+		assert.True(t, testLetStmnt(t, stmnt, tt.expectedIdentifier, tt.val), "let Statements must be valid")
 
 	}
 }
 
-func testLetStmnt(t *testing.T, s ast.Statement, name string) bool {
+func testLetStmnt(t *testing.T, s ast.Statement, name string, val interface{}) bool {
 	if "let" != s.TokenLiteral() {
 		return false
 	}
@@ -64,6 +68,7 @@ func testLetStmnt(t *testing.T, s ast.Statement, name string) bool {
 		t.Errorf("s.Name not '%s'. got=%s\n", name, letStmt.Name)
 		return false
 	}
+	testLiteralExpression(t, letStmt.Value, val)
 	return true
 }
 
@@ -79,7 +84,6 @@ func checkParseErrors(t *testing.T, p *Parser) {
 	for _, m := range errors {
 		t.Errorf("Parse error: %s", m)
 	}
-	t.FailNow()
 }
 
 func TestReturnStatemnt(t *testing.T) {

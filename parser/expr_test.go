@@ -66,7 +66,7 @@ func TestParsingPrefixExpression(t *testing.T) {
 
 		assert.Equal(t, tt.operator, expr.Operator, "operator must macth")
 
-		testIntegerLiteral(t, expr.Right, tt.integerValue)
+		testLiteralExpression(t, expr.Right, tt.integerValue)
 
 	}
 }
@@ -107,20 +107,119 @@ func TestParsingInfixExpressions(t *testing.T) {
 
 		assert.True(t, ok, "program statement must be ExpressionStatement")
 
-		exp, ok := stmt.Expression.(*ast.InfixExpression)
-		assert.True(t, ok, "expression must be PrefixExpression")
-
-		testIntegerLiteral(t, exp.Left, tt.leftValue)
-		assert.Equal(t, tt.operator, exp.Operator, "operator must macth")
-		testIntegerLiteral(t, exp.Right, tt.rightValue)
-
+		testInfixExpression(t, stmt.Expression, tt.leftValue, tt.operator, tt.rightValue)
 	}
 }
 
-func testIntegerLiteral(t *testing.T, ie ast.Expression, val int64) {
+func testInfixExpression(t *testing.T, stmt ast.Expression, left interface{},
+	operator string, right interface{},
+) {
+	exp, ok := stmt.(*ast.InfixExpression)
+	assert.True(t, ok, "expression must be PrefixExpression")
+
+	testLiteralExpression(t, exp.Left, left)
+	assert.Equal(t, operator, exp.Operator, "operator must macth")
+	testLiteralExpression(t, exp.Right, right)
+}
+
+func testIntegerExpression(t *testing.T, ie ast.Expression, val int64) {
 	literal, ok := ie.(*ast.IntegerLiteral)
 	assert.True(t, ok, "expression must be IntegerLiteral")
 
 	assert.Equal(t, val, literal.Value)
 	assert.Equal(t, fmt.Sprintf("%d", val), literal.TokenLiteral())
+}
+
+func testIdentifierExpression(t *testing.T, ie ast.Expression, val string) {
+	ident, ok := ie.(*ast.Identifier)
+	assert.True(t, ok, "expression must be Identifier")
+
+	assert.Equal(t, val, ident.Value)
+	assert.Equal(t, val, ident.TokenLiteral())
+}
+
+func testLiteralExpression(t *testing.T, ie ast.Expression, val interface{}) {
+	switch v := val.(type) {
+	case int:
+		testIntegerExpression(t, ie, int64(v))
+	case int64:
+		testIntegerExpression(t, ie, v)
+	case string:
+		testIdentifierExpression(t, ie, v)
+	}
+}
+
+func TestOperatorPrecedenceParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"-a * b",
+			"((-a) * b)",
+		},
+		{
+			"!-a",
+			"(!(-a))",
+		},
+		{
+			"a + b + c",
+			"((a + b) + c)",
+		},
+		{
+			"a + b - c",
+			"((a + b) - c)",
+		},
+		{
+			"a * b * c",
+			"((a * b) * c)",
+		},
+		{
+			"a * b / c",
+			"((a * b) / c)",
+		},
+		{
+			"a + b / c",
+			"(a + (b / c))",
+		},
+		{
+			"a + b * c + d / e - f",
+			"(((a + (b * c)) + (d / e)) - f)",
+		},
+		{
+			"3 + 4; -5 * 5",
+			"(3 + 4)((-5) * 5)",
+		},
+		{
+			"5 > 4 == 3 < 4",
+			"((5 > 4) == (3 < 4))",
+		},
+		{
+			"5 < 4 != 3 > 4",
+			"((5 < 4) != (3 > 4))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+		},
+		{
+			"let a = 100",
+			"let a = 100", // expected
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+
+		program := p.ParseProgram()
+		checkParseErrors(t, p)
+
+		assert.Equal(t, tt.expected, program.String(), "parsed expression")
+
+	}
 }

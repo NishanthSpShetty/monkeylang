@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/NishanthSpShetty/monkey/token"
@@ -13,11 +14,13 @@ type Node interface {
 type Statement interface {
 	Node
 	statementNode()
+	String() string
 }
 
 type Expression interface {
 	Node
 	expressionNode()
+	String() string
 }
 
 type Program struct {
@@ -32,6 +35,14 @@ func (p *Program) TokenLiteral() string {
 	return ""
 }
 
+func (p *Program) String() string {
+	out := bytes.Buffer{}
+	for _, st := range p.Statements {
+		out.WriteString(st.String())
+	}
+	return out.String()
+}
+
 type LetStatement struct {
 	Token token.Token
 	Name  *Identifier
@@ -42,7 +53,7 @@ func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 
 func (ls *LetStatement) String() string {
-	return fmt.Sprintf("[Token: %s, Name: %s, Value: %s]", ls.Token, ls.Name, ls.Value)
+	return fmt.Sprintf("let %s = %s", ls.Name, ls.Value)
 }
 
 type Identifier struct {
@@ -53,7 +64,7 @@ type Identifier struct {
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string {
-	return fmt.Sprintf("<Token: %v, Value: %s >", i.Token, i.Value)
+	return fmt.Sprintf("%s", i.Value)
 }
 
 type ReturnStatement struct {
@@ -76,7 +87,7 @@ type ExpressionStatement struct {
 func (es *ExpressionStatement) statementNode()       {}
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 func (es *ExpressionStatement) String() string {
-	return fmt.Sprintf("ExpressionStatement{Token: %v, Expr: %s } ", es.Token, es.Expression)
+	return fmt.Sprintf("%s", es.Expression)
 }
 
 type IntegerLiteral struct {
@@ -87,7 +98,7 @@ type IntegerLiteral struct {
 func (il *IntegerLiteral) expressionNode()      {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string {
-	return fmt.Sprintf("IntegerLiteral{Token: %v, Value: %d } ", il.Token, il.Value)
+	return fmt.Sprintf("%d", il.Value)
 }
 
 type PrefixExpression struct {
@@ -99,7 +110,7 @@ type PrefixExpression struct {
 func (pe *PrefixExpression) expressionNode()      {}
 func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
 func (pe *PrefixExpression) String() string {
-	return fmt.Sprintf("PrefixExpression{Token: %v, Operator: %s, Right: %s} ", pe.Token, pe.Operator, pe.Right)
+	return fmt.Sprintf("(%s%s)", pe.Operator, pe.Right)
 }
 
 type InfixExpression struct {
@@ -112,5 +123,14 @@ type InfixExpression struct {
 func (ie *InfixExpression) expressionNode()      {}
 func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *InfixExpression) String() string {
-	return fmt.Sprintf("InfixExpression{Token: %v, Left: %s, Operator: %s, Right: %s} ", ie.Token, ie.Left, ie.Operator, ie.Right)
+	return fmt.Sprintf("(%s %s %s)", ie.Left, ie.Operator, ie.Right)
 }
+
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) expressionNode()      {}
+func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
+func (b *Boolean) String() string       { return b.Token.Literal }

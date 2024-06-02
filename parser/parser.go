@@ -113,12 +113,13 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
 	}
-
+	p.nextToken()
 	// expr
+	stmnt.Value = p.parseExpression(LOWEST)
 
-	for !p.curTokenIs(token.SEMICOLON) {
-		p.nextToken()
-	}
+	//for !p.curTokenIs(token.SEMICOLON) {
+	//	p.nextToken()
+	//}
 	//	fmt.Printf("%+v\n", stmnt)
 	return stmnt
 }
