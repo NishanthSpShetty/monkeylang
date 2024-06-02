@@ -9,28 +9,6 @@ import (
 	"github.com/NishanthSpShetty/monkey/token"
 )
 
-const (
-	_ int = iota
-	LOWEST
-	EQUALS      // ==
-	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or !X
-	CALL        // myFunction(X)
-)
-
-var precedences = map[token.TokenType]int{
-	token.EQ:       EQUALS,
-	token.NOT_EQ:   EQUALS,
-	token.LT:       LESSGREATER,
-	token.GT:       LESSGREATER,
-	token.PLUS:     SUM,
-	token.MINUS:    SUM,
-	token.SLASH:    PRODUCT,
-	token.ASTERISK: PRODUCT,
-}
-
 type (
 	prefixParserFn func() ast.Expression
 	infixParserFn  func(ast.Expression) ast.Expression
@@ -91,6 +69,7 @@ func (p *Parser) Erors() []string {
 	return p.errors
 }
 
+// ParseProgram parse whole program and turns into statements
 func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{
 		Statements: []ast.Statement{},
@@ -194,43 +173,6 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 // / --- expr parsers -- pratt parser
 
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	stmt := &ast.ExpressionStatement{Token: p.curToken}
-	stmt.Expression = p.parseExpression(LOWEST)
-
-	if p.peekTokenIs(token.SEMICOLON) {
-		p.nextToken()
-	}
-	return stmt
-}
-
-func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("no prefix parse function for %s found", t)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) parseExpression(precedence int) ast.Expression {
-	prefixParser := p.prefixParserFns[p.curToken.Type]
-	if prefixParser == nil {
-		p.noPrefixParseFnError(p.curToken.Type)
-		return nil
-	}
-
-	leftExpr := prefixParser()
-
-	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
-		infixParser, ok := p.infixParserFns[p.peekToken.Type]
-		if !ok {
-			return leftExpr
-		}
-		p.nextToken()
-
-		leftExpr = infixParser(leftExpr)
-
-	}
-	return leftExpr
-}
-
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
@@ -248,28 +190,4 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	stmnt.Value = value
 
 	return stmnt
-}
-
-func (p *Parser) parsePrefixExpression() ast.Expression {
-	exp := &ast.PrefixExpression{
-		Token:    p.curToken,
-		Operator: p.curToken.Literal,
-	}
-	p.nextToken()
-	exp.Right = p.parseExpression(PREFIX)
-	return exp
-}
-
-func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	exp := &ast.InfixExpression{
-		Token:    p.curToken,
-		Operator: p.curToken.Literal,
-		Left:     left,
-	}
-	precedence := p.curPrecedence()
-	p.nextToken()
-
-	exp.Right = p.parseExpression(precedence)
-
-	return exp
 }
