@@ -27,8 +27,8 @@ func TestNextTokenWithSpecialChar(t *testing.T) {
 
 	for _, tt := range tests {
 		tok := l.NextToken()
-		assert.Equal(t, tt.expectedType, tok.Type, "invalid token type")
 		assert.Equal(t, tt.expectedLiteral, tok.Literal, "invalid token type")
+		assert.Equal(t, tt.expectedType, tok.Type, "invalid token type")
 	}
 }
 

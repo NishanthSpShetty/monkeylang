@@ -1,5 +1,7 @@
 package token
 
+import "fmt"
+
 type TokenType string
 
 type Token struct {
@@ -86,4 +88,8 @@ func LookupIdent(ident string) TokenType {
 		return tok
 	}
 	return IDENT
+}
+
+func (t Token) String() string {
+	return fmt.Sprintf("[Type: '%v', Literal: '%s']", t.Type, t.Literal)
 }
