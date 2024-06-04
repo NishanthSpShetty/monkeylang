@@ -76,9 +76,9 @@ func TestParsingPrefixExpression(t *testing.T) {
 func TestParsingInfixExpressions(t *testing.T) {
 	infixTests := []struct {
 		input      string
-		leftValue  int64
+		leftValue  interface{}
 		operator   string
-		rightValue int64
+		rightValue interface{}
 	}{
 		{"6 + 5;", 6, "+", 5},
 		{"5 - 5;", 5, "-", 5},
@@ -88,6 +88,9 @@ func TestParsingInfixExpressions(t *testing.T) {
 		{"5 < 5;", 5, "<", 5},
 		{"5 == 5;", 5, "==", 5},
 		{"5 != 5;", 5, "!=", 5},
+		{"true == true", true, "==", true},
+		{"true != false", true, "!=", false},
+		{"false == false", false, "==", false},
 		//	{"5 != 5 + 10;", 5, "!=", 5},
 	}
 
@@ -148,7 +151,17 @@ func testLiteralExpression(t *testing.T, ie ast.Expression, val interface{}) {
 		testIntegerExpression(t, ie, v)
 	case string:
 		testIdentifierExpression(t, ie, v)
+	case bool:
+		testBooleanLiteral(t, ie, v)
 	}
+}
+
+func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) {
+	be, ok := exp.(*ast.Boolean)
+	assert.True(t, ok, "must be boolean literal")
+	assert.Equal(t, value, be.Value, "expected boolean value matches")
+
+	assert.Equal(t, fmt.Sprintf("%t", value), be.TokenLiteral(), "token value must match")
 }
 
 func TestOperatorPrecedenceParsing(t *testing.T) {
