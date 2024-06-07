@@ -85,3 +85,58 @@ func (p *Parser) parseBoolean() ast.Expression {
 		Value: p.curTokenIs(token.TRUE),
 	}
 }
+
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	fn := &ast.FunctionLiteral{Token: p.curToken}
+
+	// we are at fn, move to (
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	fn.Parameters = p.parseFunctionParameters()
+
+	// we are at ), move to {
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	fn.Body = p.parseBlockStatement()
+
+	return fn
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	ids := []*ast.Identifier{}
+
+	// if no args present
+	if p.peekTokenIs(token.RPAREN) {
+		return ids
+	}
+	// (a,b,c)
+	// we are in (, move to first arg token
+	p.nextToken()
+	ids = append(ids, &ast.Identifier{
+		Token: p.curToken,
+		Value: p.curToken.Literal,
+	})
+
+	// loop till we have comms in next token
+	// a,b,c)
+	for p.peekTokenIs(token.COMMA) {
+		// skip arg ie. a on first iteration
+		p.nextToken()
+		// skip ,
+		p.nextToken()
+		ids = append(ids, &ast.Identifier{
+			Token: p.curToken,
+			Value: p.curToken.Literal,
+		})
+	}
+	// we should see )
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return ids
+}

@@ -40,6 +40,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixParser(token.TRUE, p.parseBoolean)
 	p.registerPrefixParser(token.FALSE, p.parseBoolean)
 	p.registerPrefixParser(token.IF, p.parseIfExpression)
+	p.registerPrefixParser(token.FUNCTION, p.parseFunctionLiteral)
 
 	// infixParserFn
 	p.registerInfixParser(token.PLUS, p.parseInfixExpression)
