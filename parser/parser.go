@@ -39,6 +39,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixParser(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefixParser(token.TRUE, p.parseBoolean)
 	p.registerPrefixParser(token.FALSE, p.parseBoolean)
+	p.registerPrefixParser(token.IF, p.parseIfExpression)
 
 	// infixParserFn
 	p.registerInfixParser(token.PLUS, p.parseInfixExpression)
@@ -154,6 +155,8 @@ func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.curToken.Type == t
 }
 
+// expectPeek checks if the next token is what we expected,
+// if yes, move to that by calling nextToken
 func (p *Parser) expectPeek(t token.TokenType) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
@@ -194,4 +197,64 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	stmnt.Value = value
 
 	return stmnt
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	exp := &ast.IfExpression{
+		Token: p.curToken,
+	}
+
+	// we are at `if`, expect "("
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+	p.nextToken()
+	exp.Condition = p.parseExpression(LOWEST)
+
+	// expect ")" and skip to ")"
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	// skip ) and move to {
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	exp.Consequence = p.parseBlockStatement()
+
+	// } else {
+	if p.peekTokenIs(token.ELSE) {
+		// move to ELSE
+		p.nextToken()
+
+		// move to {
+		if !p.expectPeek(token.LBRACE) {
+			return nil
+		}
+		exp.Alternative = p.parseBlockStatement()
+	}
+	return exp
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	bs := &ast.BlockStatement{
+		Token:      p.curToken,
+		Statements: []ast.Statement{},
+	}
+
+	// skip the {
+	p.nextToken()
+
+	// until we hit the } or end of statements
+	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			bs.Statements = append(bs.Statements, stmt)
+		}
+		// move over
+		p.nextToken()
+	}
+
+	return bs
 }
