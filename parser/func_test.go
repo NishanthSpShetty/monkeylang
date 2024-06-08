@@ -35,3 +35,22 @@ func TestFuncExpression(t *testing.T) {
 
 	testInfixExpression(t, body.Expression, "x", "+", "y")
 }
+
+func TestCallExpression(t *testing.T) {
+	input := "add( x, 2+4)"
+	l := lexer.New(input)
+
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParseErrors(t, p)
+
+	assert.Equal(t, 1, len(program.Statements), "must return one statements")
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.True(t, ok, "statement must be ExpressionStatement")
+
+	exp, ok := stmt.Expression.(*ast.CallExpression)
+	assert.True(t, ok, "Expression must be CallExpression")
+	testIdentifierExpression(t, exp.Function, "add")
+	assert.Equal(t, 2, len(exp.Arguments), "must have arguments")
+}
