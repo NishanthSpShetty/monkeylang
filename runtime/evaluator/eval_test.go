@@ -221,3 +221,21 @@ return 1;
 		assert.Equal(t, tt.expectedMessage, errObj.Message)
 	}
 }
+
+func TestString(t *testing.T) {
+	input := `"hello world"`
+
+	eval := testEval(input)
+	str, ok := eval.(*runtime.String)
+	assert.True(t, ok, "expected string literal")
+	assert.Equal(t, "hello world", str.Value, "string dint match")
+}
+
+func TestStringConcat(t *testing.T) {
+	input := `"hello" + " " + "nishanth!"`
+	eval := testEval(input)
+
+	str, ok := eval.(*runtime.String)
+	assert.True(t, ok, "expected string literal")
+	assert.Equal(t, "hello nishanth!", str.Value, "string dint match")
+}

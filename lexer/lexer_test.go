@@ -52,6 +52,9 @@ func TestNextTokenWithProgram(t *testing.T) {
 
 	10 == 10;
 	10 != 9;
+	"foobar"
+	"hello world"
+	"hello \"nishanth\""
 	`
 
 	tests := []struct {
@@ -134,6 +137,9 @@ func TestNextTokenWithProgram(t *testing.T) {
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
 		{token.SEMICOLON, ";"},
+		{token.STRING, "foobar"},
+		{token.STRING, "hello world"},
+		{token.STRING, "hello \\\"nishanth\\\""},
 		{token.EOF, ""},
 	}
 

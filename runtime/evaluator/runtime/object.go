@@ -12,6 +12,7 @@ type ObjectType string
 
 const (
 	ObjInteger  ObjectType = "Integer"
+	ObjString   ObjectType = "String"
 	ObjBoolean  ObjectType = "Boolean"
 	ObjNull     ObjectType = "Null"
 	ObjReturn   ObjectType = "Return"
@@ -106,4 +107,13 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+type String struct {
+	Value string
+}
+
+func (s *String) Type() ObjectType { return ObjString }
+func (s *String) Inspect() string {
+	return fmt.Sprintf("%s::[%s]", s.Value, s.Type())
 }

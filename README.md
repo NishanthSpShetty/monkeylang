@@ -56,8 +56,11 @@ let fibonacci = fn(x) {
 };
 
 fn(x,Y){ x+y ;} (3,4) 
+let firstname = "Nishanth"
+let lastname= "Shetty"
+let fullname = firstname + " " + lastname
 ```
-
+_all the above snippets are valid monkey lang, try executing them in a repl_
 
 
 ## Developement and Testing

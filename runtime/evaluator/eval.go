@@ -99,6 +99,9 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 		}
 
 		return applyFunction(function, args)
+	case *ast.StringLiteral:
+		return &runtime.String{Value: node.Value}
+
 	}
 
 	return errors.New("unknown program statement: %T", node)
@@ -181,9 +184,11 @@ func evalInfixOperator(op string, left, right runtime.Object) runtime.Object {
 	switch {
 	case left.Type() == runtime.ObjInteger && right.Type() == runtime.ObjInteger:
 		return evalIntegerInfixExpression(op, left, right)
+	case left.Type() == runtime.ObjString && right.Type() == runtime.ObjString:
+		return evalStringInfixExpression(op, left, right)
+
 	case left.Type() != right.Type():
 		return errors.New("type mismatch: %s %s %s", left.Type(), op, right.Type())
-
 	case op == "==":
 		return nativeBool(left == right)
 
@@ -191,6 +196,17 @@ func evalInfixOperator(op string, left, right runtime.Object) runtime.Object {
 		return nativeBool(left != right)
 	default:
 		return errors.New("unknown operator: %s %s %s", left.Type(), op, right.Type())
+	}
+}
+
+func evalStringInfixExpression(op string, left, right runtime.Object) runtime.Object {
+	if op != "+" {
+		return errors.New("unknown operator: %s %s %s", left.Type(), op, right.Type())
+	}
+	l := left.(*runtime.String)
+	r := right.(*runtime.String)
+	return &runtime.String{
+		Value: l.Value + r.Value,
 	}
 }
 

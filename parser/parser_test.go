@@ -143,3 +143,27 @@ func TestIdentifierExpression(t *testing.T) {
 	assert.Equal(t, "foobar", ident.Value)
 	assert.Equal(t, "foobar", ident.TokenLiteral())
 }
+
+func TestString(t *testing.T) {
+	input := `
+	"hello world";
+	`
+
+	l := lexer.New(input)
+
+	p := New(l)
+
+	program := p.ParseProgram()
+
+	assert.NotNil(t, program, "program must be non nil")
+
+	checkParseErrors(t, p)
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+	assert.True(t, ok, "program statement must be ExpressionStatement")
+
+	str, ok := stmt.Expression.(*ast.StringLiteral)
+	assert.True(t, ok, "expression must be Identifier")
+
+	assert.Equal(t, "hello world", str.Value)
+}

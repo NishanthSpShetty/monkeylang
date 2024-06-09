@@ -86,6 +86,10 @@ func (l *Lexer) NextToken() token.Token {
 	case '*':
 		tok = token.CreateForByte(token.ASTERISK, l.ch)
 
+	case '"':
+		// start of string literal
+		tok.Type = token.STRING
+		tok.Literal = l.readString()
 	case 0:
 		tok = token.Eof()
 
@@ -106,6 +110,20 @@ func (l *Lexer) NextToken() token.Token {
 	l.readChar()
 
 	return tok
+}
+
+func (l *Lexer) readString() string {
+	position := l.position + 1 // skip "
+	prev := l.ch
+	for {
+		l.readChar()
+
+		if (l.ch == '"' && prev != '\\') || l.ch == 0 {
+			break
+		}
+		prev = l.ch
+	}
+	return l.input[position:l.position]
 }
 
 func (l *Lexer) readNumber() string {
