@@ -5,6 +5,10 @@ Interpreter written in Go.
 
 ## Build
 
+```
+make build
+```
+
 ## Usage
 
 To run you can use the binary built in previous step
@@ -54,6 +58,14 @@ let fibonacci = fn(x) {
 fn(x,Y){ x+y ;} (3,4) 
 ```
 
+
+
+## Developement and Testing
+
+### Test
+```
+make test   
+```
 
 ## Reference
 
