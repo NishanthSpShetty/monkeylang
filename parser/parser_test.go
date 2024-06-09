@@ -11,10 +11,10 @@ import (
 func TestLet(t *testing.T) {
 	// FIXME
 	input := `
-	let x = 5
-	let y = 10
-	let foobar = 838383
-	let bar = foobar
+	let x = 5;
+	let y = 10;
+	let foobar = 838383;
+	let bar = foobar;
 
 	`
 
@@ -87,11 +87,14 @@ func checkParseErrors(t *testing.T, p *Parser) {
 }
 
 func TestReturnStatemnt(t *testing.T) {
+	// missing semicolon, works for us
 	input := `
 	return 5;
-	return 10;
+	return 10
 	return 993322;
 	`
+
+	ret := []string{"5", "10", "993322"}
 
 	l := lexer.New(input)
 
@@ -105,13 +108,14 @@ func TestReturnStatemnt(t *testing.T) {
 
 	assert.Equal(t, 3, len(program.Statements), "must have  3 Statements")
 
-	for _, stmnt := range program.Statements {
+	for i, stmnt := range program.Statements {
 		retStmnt, ok := stmnt.(*ast.ReturnStatement)
 		if !ok {
 			t.Errorf("statement is not a *ast.ReturnStatement. got %T", stmnt)
 		}
 
 		assert.Equal(t, "return", retStmnt.TokenLiteral(), "invalid token")
+		assert.Equal(t, ret[i], retStmnt.ReturnValue.TokenLiteral(), "must return value")
 	}
 }
 
