@@ -8,16 +8,27 @@ import (
 	"github.com/NishanthSpShetty/monkey/ast"
 )
 
-type ObjectType string
+type (
+	ObjectType      string
+	BuiltinFunction func(args ...Object) Object
+)
 
 const (
 	ObjInteger  ObjectType = "Integer"
 	ObjString   ObjectType = "String"
 	ObjBoolean  ObjectType = "Boolean"
-	ObjNull     ObjectType = "Null"
+	ObjNull     ObjectType = "Nil"
 	ObjReturn   ObjectType = "Return"
 	ObjError    ObjectType = "Error"
 	ObjFunction ObjectType = "Function"
+	ObjBuiltin  ObjectType = "Builtin"
+	ObjArray    ObjectType = "Array"
+)
+
+var (
+	Nil   = &NilType{}
+	True  = &Boolean{Value: true}
+	False = &Boolean{Value: false}
 )
 
 type Object interface {
@@ -49,15 +60,15 @@ func (b *Boolean) Type() ObjectType {
 	return ObjBoolean
 }
 
-type Null struct {
+type NilType struct {
 	Value bool
 }
 
-func (n *Null) Inspect() string {
+func (n *NilType) Inspect() string {
 	return string(ObjNull)
 }
 
-func (n *Null) Type() ObjectType {
+func (n *NilType) Type() ObjectType {
 	return ObjNull
 }
 
@@ -116,4 +127,23 @@ type String struct {
 func (s *String) Type() ObjectType { return ObjString }
 func (s *String) Inspect() string {
 	return fmt.Sprintf("%s::[%s]", s.Value, s.Type())
+}
+
+type Array struct {
+	Elements []Object
+}
+
+func (a *Array) Len() int64 { return int64(len(a.Elements)) }
+
+func (a *Array) Type() ObjectType { return ObjArray }
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+	elements := []string{}
+	for _, e := range a.Elements {
+		elements = append(elements, e.Inspect())
+	}
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]::[Array]")
+	return out.String()
 }
