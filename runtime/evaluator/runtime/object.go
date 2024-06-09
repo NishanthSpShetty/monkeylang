@@ -22,6 +22,7 @@ const (
 	ObjError    ObjectType = "Error"
 	ObjFunction ObjectType = "Function"
 	ObjBuiltin  ObjectType = "Builtin"
+	ObjArray    ObjectType = "Array"
 )
 
 var (
@@ -126,4 +127,23 @@ type String struct {
 func (s *String) Type() ObjectType { return ObjString }
 func (s *String) Inspect() string {
 	return fmt.Sprintf("%s::[%s]", s.Value, s.Type())
+}
+
+type Array struct {
+	Elements []Object
+}
+
+func (a *Array) Len() int64 { return int64(len(a.Elements)) }
+
+func (a *Array) Type() ObjectType { return ObjArray }
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+	elements := []string{}
+	for _, e := range a.Elements {
+		elements = append(elements, e.Inspect())
+	}
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]::[Array]")
+	return out.String()
 }

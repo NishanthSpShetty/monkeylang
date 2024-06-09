@@ -167,3 +167,34 @@ func TestString(t *testing.T) {
 
 	assert.Equal(t, "hello world", str.Value)
 }
+
+func TestArrayLiterals(t *testing.T) {
+	input := "[1, 2*2, 3+3]"
+
+	p := New(lexer.New(input))
+	program := p.ParseProgram()
+	checkParseErrors(t, p)
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.True(t, ok, "program statement must be ExpressionStatement")
+	array, ok := stmt.Expression.(*ast.ArrayLiteral)
+	assert.True(t, ok, "expression must be ArrayLiteral")
+
+	assert.Equal(t, 3, len(array.Elements), "must have 3 elements")
+	testIntegerExpression(t, array.Elements[0], 1)
+	testInfixExpression(t, array.Elements[1], 2, "*", 2)
+	testInfixExpression(t, array.Elements[2], 3, "+", 3)
+}
+
+func TestParsingIndexExpressions(t *testing.T) {
+	input := "myArray[1 + 1]"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParseErrors(t, p)
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+
+	assert.True(t, ok, "expression must be IndexExpression")
+	testIdentifierExpression(t, indexExp.Left, "myArray")
+	testInfixExpression(t, indexExp.Index, 1, "+", 1)
+}

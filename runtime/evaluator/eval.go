@@ -95,6 +95,28 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 	case *ast.StringLiteral:
 		return &runtime.String{Value: node.Value}
 
+	case *ast.ArrayLiteral:
+		ele := evalExpression(r, node.Elements)
+		if len(ele) == 1 && runtime.IsError(ele[0]) {
+			return ele[0]
+		}
+		return &runtime.Array{
+			Elements: ele,
+		}
+
+	case *ast.IndexExpression:
+		left := Eval(r, node.Left)
+		if runtime.IsError(left) {
+			return left
+		}
+
+		idx := Eval(r, node.Index)
+		if runtime.IsError(idx) {
+			return idx
+		}
+
+		return evaluateIndexExpression(left, idx)
+
 	}
 
 	return runtime.NewError("unknown program statement: %T", node)
@@ -317,4 +339,25 @@ func extendFunctionEnv(fn *runtime.Function, args []runtime.Object) *runtime.Run
 		env.Put(param.Value, args[i])
 	}
 	return env
+}
+
+func evaluateIndexExpression(left, idx runtime.Object) runtime.Object {
+	switch {
+
+	case left.Type() == runtime.ObjArray && idx.Type() == runtime.ObjInteger:
+		return evalArrayIndexExpression(left, idx)
+	default:
+		return runtime.NewError("index operator not suppoerted: %s", left.Type())
+	}
+}
+
+func evalArrayIndexExpression(left, idx runtime.Object) runtime.Object {
+	arr := left.(*runtime.Array)
+	i := idx.(*runtime.Integer).Value
+	max := arr.Len() - 1
+	if i < 0 || i > max {
+		// out of bound access os nil
+		return runtime.Nil
+	}
+	return arr.Elements[i]
 }

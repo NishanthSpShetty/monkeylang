@@ -55,6 +55,7 @@ func TestNextTokenWithProgram(t *testing.T) {
 	"foobar"
 	"hello world"
 	"hello \"nishanth\""
+	[1,2];
 	`
 
 	tests := []struct {
@@ -140,6 +141,12 @@ func TestNextTokenWithProgram(t *testing.T) {
 		{token.STRING, "foobar"},
 		{token.STRING, "hello world"},
 		{token.STRING, "hello \\\"nishanth\\\""},
+		{token.LBRACKET, "["},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "2"},
+		{token.RBRACKET, "]"},
+		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}
 

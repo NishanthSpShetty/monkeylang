@@ -59,6 +59,10 @@ fn(x,Y){ x+y ;} (3,4)
 let firstname = "Nishanth"
 let lastname= "Shetty"
 let fullname = firstname + " " + lastname
+
+let ar = [1,2, "hello", 2/2, fn(x) { x* 2; }(3)]
+ar[2]
+len(ar)
 ```
 _all the above snippets are valid monkey lang, try executing them in a repl_
 

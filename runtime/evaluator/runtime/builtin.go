@@ -18,6 +18,8 @@ func fnLen() *Builtin {
 			switch arg := args[0].(type) {
 			case *String:
 				return &Integer{Value: int64(len(arg.Value))}
+			case *Array:
+				return &Integer{Value: arg.Len()}
 			default:
 				return NewError("argument to `len` not supported, got %s",
 					args[0].Type())
