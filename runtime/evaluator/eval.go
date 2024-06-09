@@ -2,14 +2,7 @@ package evaluator
 
 import (
 	"github.com/NishanthSpShetty/monkey/ast"
-	"github.com/NishanthSpShetty/monkey/runtime/errors"
 	"github.com/NishanthSpShetty/monkey/runtime/evaluator/runtime"
-)
-
-var (
-	Null  = &runtime.Null{}
-	True  = &runtime.Boolean{Value: true}
-	False = &runtime.Boolean{Value: false}
 )
 
 func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
@@ -20,7 +13,7 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 	case *ast.LetStatement:
 		val := Eval(r, node.Value)
 
-		if errors.IsError(val) {
+		if runtime.IsError(val) {
 			return val
 		}
 		r.Put(node.Name.Value, val)
@@ -44,7 +37,7 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 
 	case *ast.PrefixExpression:
 		right := Eval(r, node.Right)
-		if errors.IsError(right) {
+		if runtime.IsError(right) {
 			return right
 		}
 		return evalPrefixExp(node.Operator, right)
@@ -53,12 +46,12 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 	case *ast.InfixExpression:
 
 		left := Eval(r, node.Left)
-		if errors.IsError(left) {
+		if runtime.IsError(left) {
 			return left
 		}
 
 		right := Eval(r, node.Right)
-		if errors.IsError(right) {
+		if runtime.IsError(right) {
 			return right
 		}
 		return evalInfixOperator(node.Operator, left, right)
@@ -72,7 +65,7 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 	case *ast.ReturnStatement:
 		val := Eval(r, node.ReturnValue)
 
-		if errors.IsError(val) {
+		if runtime.IsError(val) {
 			return val
 		}
 		return &runtime.ReturnValue{
@@ -89,12 +82,12 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 	case *ast.CallExpression:
 		function := Eval(r, node.Function)
 
-		if errors.IsError(function) {
+		if runtime.IsError(function) {
 			return function
 		}
 
 		args := evalExpression(r, node.Arguments)
-		if len(args) == 1 && errors.IsError(args[0]) {
+		if len(args) == 1 && runtime.IsError(args[0]) {
 			return args[0]
 		}
 
@@ -104,15 +97,15 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 
 	}
 
-	return errors.New("unknown program statement: %T", node)
+	return runtime.NewError("unknown program statement: %T", node)
 }
 
 func nativeBool(b bool) *runtime.Boolean {
 	if b {
-		return True
+		return runtime.True
 	}
 
-	return False
+	return runtime.False
 }
 
 func evalProgram(r *runtime.Runtime, program *ast.Program) runtime.Object {
@@ -151,28 +144,28 @@ func evalPrefixExp(op string, right runtime.Object) runtime.Object {
 	case "-":
 		return evalMinusPrefixOperator(right)
 	default:
-		return errors.New("unknown operator: %s%s", op, right.Type())
+		return runtime.NewError("unknown operator: %s%s", op, right.Type())
 	}
 }
 
 func evalBangOperatorExp(right runtime.Object) runtime.Object {
 	switch right {
-	case True:
-		return False
+	case runtime.True:
+		return runtime.False
 
-	case False:
-		return True
-	case Null:
+	case runtime.False:
+		return runtime.True
+	case runtime.Nil:
 		// not of null ? == True
-		return True
+		return runtime.True
 	default:
-		return False
+		return runtime.False
 	}
 }
 
 func evalMinusPrefixOperator(right runtime.Object) runtime.Object {
 	if right.Type() != runtime.ObjInteger {
-		return errors.New("unknown operator: -%s", right.Type())
+		return runtime.NewError("unknown operator: -%s", right.Type())
 	}
 	value := right.(*runtime.Integer).Value
 	return &runtime.Integer{
@@ -188,20 +181,20 @@ func evalInfixOperator(op string, left, right runtime.Object) runtime.Object {
 		return evalStringInfixExpression(op, left, right)
 
 	case left.Type() != right.Type():
-		return errors.New("type mismatch: %s %s %s", left.Type(), op, right.Type())
+		return runtime.NewError("type mismatch: %s %s %s", left.Type(), op, right.Type())
 	case op == "==":
 		return nativeBool(left == right)
 
 	case op == "!=":
 		return nativeBool(left != right)
 	default:
-		return errors.New("unknown operator: %s %s %s", left.Type(), op, right.Type())
+		return runtime.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 	}
 }
 
 func evalStringInfixExpression(op string, left, right runtime.Object) runtime.Object {
 	if op != "+" {
-		return errors.New("unknown operator: %s %s %s", left.Type(), op, right.Type())
+		return runtime.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 	}
 	l := left.(*runtime.String)
 	r := right.(*runtime.String)
@@ -240,7 +233,7 @@ func evalIntegerInfixExpression(op string, left, right runtime.Object) runtime.O
 		return nativeBool(lval != rval)
 
 	default:
-		return errors.New("unknown operator: %s %s %s", left.Type(), op, right.Type())
+		return runtime.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 	}
 
 	return &runtime.Integer{
@@ -251,7 +244,7 @@ func evalIntegerInfixExpression(op string, left, right runtime.Object) runtime.O
 func evaluateIfExpression(r *runtime.Runtime, ie *ast.IfExpression) runtime.Object {
 	cond := Eval(r, ie.Condition)
 
-	if errors.IsError(cond) {
+	if runtime.IsError(cond) {
 		return cond
 	}
 
@@ -260,17 +253,17 @@ func evaluateIfExpression(r *runtime.Runtime, ie *ast.IfExpression) runtime.Obje
 	} else if ie.Alternative != nil {
 		return Eval(r, ie.Alternative)
 	} else {
-		return Null
+		return runtime.Nil
 	}
 }
 
 func isTruthy(obj runtime.Object) bool {
 	switch obj {
-	case Null:
+	case runtime.Nil:
 		return false
-	case True:
+	case runtime.True:
 		return true
-	case False:
+	case runtime.False:
 		return false
 	}
 	return true
@@ -278,10 +271,14 @@ func isTruthy(obj runtime.Object) bool {
 
 func evalIdentifier(r *runtime.Runtime, node *ast.Identifier) runtime.Object {
 	val, ok := r.Get(node.Value)
-	if !ok {
-		return errors.New("identifier not found: %s", node.Value)
+	if ok {
+		return val
 	}
-	return val
+	// lets look at built in too
+	if bf, ok := runtime.GetBuiltin(node.Value); ok {
+		return bf
+	}
+	return runtime.NewError("identifier not found: %s", node.Value)
 }
 
 func evalExpression(r *runtime.Runtime, exps []ast.Expression) []runtime.Object {
@@ -289,7 +286,7 @@ func evalExpression(r *runtime.Runtime, exps []ast.Expression) []runtime.Object 
 
 	for _, exp := range exps {
 		eval := Eval(r, exp)
-		if errors.IsError(eval) {
+		if runtime.IsError(eval) {
 			return []runtime.Object{eval}
 		}
 		res = append(res, eval)
@@ -298,16 +295,19 @@ func evalExpression(r *runtime.Runtime, exps []ast.Expression) []runtime.Object 
 }
 
 func applyFunction(fn runtime.Object, args []runtime.Object) runtime.Object {
-	function, ok := fn.(*runtime.Function)
-	if !ok {
-		return errors.New("not a function: %s", fn.Type())
+	switch fn := fn.(type) {
+	case *runtime.Function:
+		env := extendFunctionEnv(fn, args)
+		eval := Eval(env, fn.Body)
+		if rv, ok := eval.(*runtime.ReturnValue); ok {
+			return rv.Value
+		}
+		return eval
+	case *runtime.Builtin:
+		return fn.Fn(args...)
+	default:
+		return runtime.NewError("not a function: %s", fn.Type())
 	}
-	env := extendFunctionEnv(function, args)
-	eval := Eval(env, function.Body)
-	if rv, ok := eval.(*runtime.ReturnValue); ok {
-		return rv.Value
-	}
-	return eval
 }
 
 func extendFunctionEnv(fn *runtime.Function, args []runtime.Object) *runtime.Runtime {

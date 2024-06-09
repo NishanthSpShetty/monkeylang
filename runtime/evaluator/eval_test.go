@@ -144,7 +144,7 @@ func TestIfExpression(t *testing.T) {
 }
 
 func testNull(t *testing.T, obj runtime.Object) {
-	assert.Equal(t, Null, obj, "runtime must be of Null")
+	assert.Equal(t, runtime.Nil, obj, "runtime must be of Null")
 }
 
 func TestReturnStatements(t *testing.T) {

@@ -8,16 +8,26 @@ import (
 	"github.com/NishanthSpShetty/monkey/ast"
 )
 
-type ObjectType string
+type (
+	ObjectType      string
+	BuiltinFunction func(args ...Object) Object
+)
 
 const (
 	ObjInteger  ObjectType = "Integer"
 	ObjString   ObjectType = "String"
 	ObjBoolean  ObjectType = "Boolean"
-	ObjNull     ObjectType = "Null"
+	ObjNull     ObjectType = "Nil"
 	ObjReturn   ObjectType = "Return"
 	ObjError    ObjectType = "Error"
 	ObjFunction ObjectType = "Function"
+	ObjBuiltin  ObjectType = "Builtin"
+)
+
+var (
+	Nil   = &NilType{}
+	True  = &Boolean{Value: true}
+	False = &Boolean{Value: false}
 )
 
 type Object interface {
@@ -49,15 +59,15 @@ func (b *Boolean) Type() ObjectType {
 	return ObjBoolean
 }
 
-type Null struct {
+type NilType struct {
 	Value bool
 }
 
-func (n *Null) Inspect() string {
+func (n *NilType) Inspect() string {
 	return string(ObjNull)
 }
 
-func (n *Null) Type() ObjectType {
+func (n *NilType) Type() ObjectType {
 	return ObjNull
 }
 
