@@ -111,6 +111,8 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 
 	// if no args present
 	if p.peekTokenIs(token.RPAREN) {
+		// we are in (, move to )
+		p.nextToken()
 		return ids
 	}
 	// (a,b,c)

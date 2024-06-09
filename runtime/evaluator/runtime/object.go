@@ -1,15 +1,22 @@
-package object
+package runtime
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"strings"
+
+	"github.com/NishanthSpShetty/monkey/ast"
+)
 
 type ObjectType string
 
 const (
-	ObjInteger ObjectType = "Integer"
-	ObjBoolean ObjectType = "Boolean"
-	ObjNull    ObjectType = "Null"
-	ObjReturn  ObjectType = "Return"
-	ObjError   ObjectType = "Error"
+	ObjInteger  ObjectType = "Integer"
+	ObjBoolean  ObjectType = "Boolean"
+	ObjNull     ObjectType = "Null"
+	ObjReturn   ObjectType = "Return"
+	ObjError    ObjectType = "Error"
+	ObjFunction ObjectType = "Function"
 )
 
 type Object interface {
@@ -75,4 +82,28 @@ func (e *Error) Inspect() string {
 
 func (e *Error) Type() ObjectType {
 	return ObjError
+}
+
+type Function struct {
+	Params  []*ast.Identifier
+	Body    *ast.BlockStatement
+	Runtime *Runtime
+}
+
+func (f *Function) Type() ObjectType { return ObjFunction }
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, p := range f.Params {
+		params = append(params, p.String())
+	}
+	out.WriteString("fn")
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") {\n")
+	out.WriteString("\t" + f.Body.String())
+	out.WriteString("\n}")
+
+	return out.String()
 }

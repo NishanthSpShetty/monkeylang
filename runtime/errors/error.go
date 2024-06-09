@@ -3,15 +3,15 @@ package errors
 import (
 	"fmt"
 
-	"github.com/NishanthSpShetty/monkey/runtime/object"
+	"github.com/NishanthSpShetty/monkey/runtime/evaluator/runtime"
 )
 
-func New(format string, a ...interface{}) *object.Error {
-	return &object.Error{
+func New(format string, a ...interface{}) *runtime.Error {
+	return &runtime.Error{
 		Message: fmt.Sprintf(format, a...),
 	}
 }
 
-func IsError(obj object.Object) bool {
-	return obj != nil && obj.Type() == object.ObjError
+func IsError(obj runtime.Object) bool {
+	return obj != nil && obj.Type() == runtime.ObjError
 }

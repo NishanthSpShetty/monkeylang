@@ -5,7 +5,7 @@ import (
 
 	"github.com/NishanthSpShetty/monkey/lexer"
 	"github.com/NishanthSpShetty/monkey/parser"
-	"github.com/NishanthSpShetty/monkey/runtime/object"
+	"github.com/NishanthSpShetty/monkey/runtime/evaluator/runtime"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,15 +38,24 @@ func TestEvalIntegerExpr(t *testing.T) {
 	}
 }
 
-func testEval(input string) object.Object {
-	return Eval(parser.New(lexer.New(input)).ParseProgram())
+func testEval(input string) runtime.Object {
+	return Eval(runtime.New(),
+		parser.New(lexer.New(input)).ParseProgram())
 }
 
-func testIntegerObject(t *testing.T, obj object.Object, exp int64) {
-	io, ok := obj.(*object.Integer)
-	assert.True(t, ok, "object must be Integer object")
+func testIntegerObject(t *testing.T, obj runtime.Object, exp int64) {
+	er, ok := obj.(*runtime.Error)
+	if ok {
+		assert.False(t, ok, er.Inspect())
+		return
+	}
+	io, ok := obj.(*runtime.Integer)
+	assert.Truef(t, ok, "runtime must be Integer object, got %T", obj)
+	if io == nil {
+		return
+	}
 	assert.Equal(t, exp, io.Value)
-	assert.Equal(t, object.ObjInteger, io.Type())
+	assert.Equal(t, runtime.ObjInteger, io.Type())
 }
 
 func TestEvalBoolean(t *testing.T) {
@@ -83,11 +92,11 @@ func TestEvalBoolean(t *testing.T) {
 	}
 }
 
-func testBoolObject(t *testing.T, obj object.Object, exp bool) {
-	io, ok := obj.(*object.Boolean)
-	assert.True(t, ok, "object must be Boolean object")
+func testBoolObject(t *testing.T, obj runtime.Object, exp bool) {
+	io, ok := obj.(*runtime.Boolean)
+	assert.True(t, ok, "runtime must be Boolean object")
 	assert.Equal(t, exp, io.Value)
-	assert.Equal(t, object.ObjBoolean, io.Type())
+	assert.Equal(t, runtime.ObjBoolean, io.Type())
 }
 
 func TestBangExp(t *testing.T) {
@@ -134,8 +143,8 @@ func TestIfExpression(t *testing.T) {
 	}
 }
 
-func testNull(t *testing.T, obj object.Object) {
-	assert.Equal(t, Null, obj, "object must be of Null")
+func testNull(t *testing.T, obj runtime.Object) {
+	assert.Equal(t, Null, obj, "runtime must be of Null")
 }
 
 func TestReturnStatements(t *testing.T) {
@@ -200,10 +209,14 @@ return 1;
 `,
 			"unknown operator: Boolean + Boolean",
 		},
+		{
+			"foobar",
+			"identifier not found: foobar",
+		},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		errObj, ok := evaluated.(*object.Error)
+		errObj, ok := evaluated.(*runtime.Error)
 		assert.Truef(t, ok, "result must be Error Object, got %T", evaluated)
 		assert.Equal(t, tt.expectedMessage, errObj.Message)
 	}
