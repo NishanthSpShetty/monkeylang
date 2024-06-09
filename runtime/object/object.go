@@ -5,9 +5,11 @@ import "fmt"
 type ObjectType string
 
 const (
-	ObjInteger ObjectType = "INTEGER"
-	ObjBoolean ObjectType = "BOOLEAN"
-	ObjNull    ObjectType = "NULL"
+	ObjInteger ObjectType = "Integer"
+	ObjBoolean ObjectType = "Boolean"
+	ObjNull    ObjectType = "Null"
+	ObjReturn  ObjectType = "Return"
+	ObjError   ObjectType = "Error"
 )
 
 type Object interface {
@@ -49,4 +51,28 @@ func (n *Null) Inspect() string {
 
 func (n *Null) Type() ObjectType {
 	return ObjNull
+}
+
+type ReturnValue struct {
+	Value Object
+}
+
+func (rv *ReturnValue) Inspect() string {
+	return rv.Value.Inspect()
+}
+
+func (rv *ReturnValue) Type() ObjectType {
+	return ObjReturn
+}
+
+type Error struct {
+	Message string
+}
+
+func (e *Error) Inspect() string {
+	return "Error: " + e.Message
+}
+
+func (e *Error) Type() ObjectType {
+	return ObjError
 }

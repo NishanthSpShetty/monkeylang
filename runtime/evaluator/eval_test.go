@@ -137,3 +137,74 @@ func TestIfExpression(t *testing.T) {
 func testNull(t *testing.T, obj object.Object) {
 	assert.Equal(t, Null, obj, "object must be of Null")
 }
+
+func TestReturnStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"return 10;", 10},
+		{"return 10; 9;", 10},
+		{"return 2 * 5; 9;", 10},
+		{"9; return 2 * 5; 9;", 10},
+		{`
+if (10 > 1) {
+	if (10 > 1) {
+		return 10;
+	}
+	return 1;
+}`, 10},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{
+			"5 + true;",
+			"type mismatch: Integer + Boolean",
+		},
+		{
+			"5 + true; 5;",
+			"type mismatch: Integer + Boolean",
+		},
+		{
+			"-true",
+			"unknown operator: -Boolean",
+		},
+		{
+			"true + false;",
+			"unknown operator: Boolean + Boolean",
+		},
+		{
+			"5; true + false; 5",
+			"unknown operator: Boolean + Boolean",
+		},
+		{
+			"if (10 > 1) { true + false; }",
+			"unknown operator: Boolean + Boolean",
+		},
+		{
+			`if (10 > 1) {
+if (10 > 1) {
+return true + false; 10;
+}
+return 1;
+}
+`,
+			"unknown operator: Boolean + Boolean",
+		},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		errObj, ok := evaluated.(*object.Error)
+		assert.Truef(t, ok, "result must be Error Object, got %T", evaluated)
+		assert.Equal(t, tt.expectedMessage, errObj.Message)
+	}
+}
