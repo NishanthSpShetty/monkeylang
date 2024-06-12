@@ -97,6 +97,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.CreateForByte(token.LBRACKET, l.ch)
 	case ']':
 		tok = token.CreateForByte(token.RBRACKET, l.ch)
+	case ':':
+		tok = token.CreateForByte(token.COLON, l.ch)
 
 	default:
 		if isLetter(l.ch) {
