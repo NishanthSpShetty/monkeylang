@@ -43,6 +43,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixParser(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefixParser(token.STRING, p.parseStringLiteral)
 	p.registerPrefixParser(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefixParser(token.LBRACE, p.parseHashLiteral)
 
 	// infixParserFn
 	p.registerInfixParser(token.PLUS, p.parseInfixExpression)
@@ -260,9 +261,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	// until we hit the } or end of statements
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
-		if stmt != nil {
-			bs.Statements = append(bs.Statements, stmt)
-		}
+		bs.Statements = append(bs.Statements, stmt)
 		// move over
 		p.nextToken()
 	}
@@ -300,4 +299,34 @@ func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	}
 
 	return exp
+}
+
+func (p *Parser) parseHashLiteral() ast.Expression {
+	h := &ast.HashLiteral{
+		Token: p.curToken,
+		Pairs: make(map[ast.Expression]ast.Expression),
+	}
+
+	// we are at {
+	// until we see }
+	for !p.peekTokenIs(token.RBRACE) {
+		p.nextToken()
+
+		key := p.parseExpression(LOWEST)
+
+		if !p.expectPeek(token.COLON) {
+			return nil
+		}
+		p.nextToken()
+		val := p.parseExpression(LOWEST)
+		if !p.peekTokenIs(token.RBRACE) && !p.expectPeek(token.COMMA) {
+			return nil
+		}
+		h.Pairs[key] = val
+	}
+	// move to {
+	if !p.expectPeek(token.RBRACE) {
+		return nil
+	}
+	return h
 }

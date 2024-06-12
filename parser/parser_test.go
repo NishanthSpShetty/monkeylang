@@ -48,7 +48,7 @@ func TestLet(t *testing.T) {
 }
 
 func testLetStmnt(t *testing.T, s ast.Statement, name string, val interface{}) bool {
-	if "let" != s.TokenLiteral() {
+	if s.TokenLiteral() != "let" {
 		return false
 	}
 
