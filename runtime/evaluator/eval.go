@@ -116,6 +116,8 @@ func Eval(r *runtime.Runtime, node ast.Node) runtime.Object {
 		}
 
 		return evaluateIndexExpression(left, idx)
+	case *ast.HashLiteral:
+		return evalHashLiteral(r, node)
 
 	}
 
@@ -360,4 +362,30 @@ func evalArrayIndexExpression(left, idx runtime.Object) runtime.Object {
 		return runtime.Nil
 	}
 	return arr.Elements[i]
+}
+
+func evalHashLiteral(r *runtime.Runtime, hl *ast.HashLiteral) runtime.Object {
+	h := &runtime.Hash{
+		Pairs: make(map[runtime.HashKey]runtime.HashPair),
+	}
+
+	for k, v := range hl.Pairs {
+		ek := Eval(r, k)
+
+		if runtime.IsError(ek) {
+			return ek
+		}
+
+		hashKey, ok := ek.(runtime.Hashtable)
+
+		if !ok {
+			runtime.NewError("unusable as hash key: %s", ek.Type())
+		}
+
+		val := Eval(r, v)
+
+		h.Pairs[hashKey.HashKey()] = runtime.HashPair{Key: ek, Value: val}
+	}
+
+	return h
 }

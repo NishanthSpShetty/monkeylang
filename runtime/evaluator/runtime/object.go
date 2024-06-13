@@ -3,6 +3,7 @@ package runtime
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"strings"
 
 	"github.com/NishanthSpShetty/monkey/ast"
@@ -23,6 +24,7 @@ const (
 	ObjFunction ObjectType = "Function"
 	ObjBuiltin  ObjectType = "Builtin"
 	ObjArray    ObjectType = "Array"
+	ObjHash     ObjectType = "Hash"
 )
 
 var (
@@ -36,6 +38,14 @@ type Object interface {
 	Inspect() string
 }
 
+type HashKey struct {
+	Type  ObjectType
+	Value uint64
+}
+
+type Hashtable interface {
+	HashKey() HashKey
+}
 type Integer struct {
 	Value int64
 }
@@ -48,6 +58,13 @@ func (i *Integer) Type() ObjectType {
 	return ObjInteger
 }
 
+func (i *Integer) HashKey() HashKey {
+	return HashKey{
+		Type:  i.Type(),
+		Value: uint64(i.Value),
+	}
+}
+
 type Boolean struct {
 	Value bool
 }
@@ -58,6 +75,17 @@ func (b *Boolean) Inspect() string {
 
 func (b *Boolean) Type() ObjectType {
 	return ObjBoolean
+}
+
+func (b *Boolean) HashKey() HashKey {
+	val := uint64(0)
+	if b.Value {
+		val = 1
+	}
+	return HashKey{
+		Type:  b.Type(),
+		Value: val,
+	}
 }
 
 type NilType struct {
@@ -129,6 +157,12 @@ func (s *String) Inspect() string {
 	return fmt.Sprintf("%s::[%s]", s.Value, s.Type())
 }
 
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
 type Array struct {
 	Elements []Object
 }
@@ -145,5 +179,28 @@ func (a *Array) Inspect() string {
 	out.WriteString("[")
 	out.WriteString(strings.Join(elements, ", "))
 	out.WriteString("]::[Array]")
+	return out.String()
+}
+
+type HashPair struct {
+	Key   Object
+	Value Object
+}
+type Hash struct {
+	Pairs map[HashKey]HashPair
+}
+
+func (h *Hash) Type() ObjectType { return ObjHash }
+func (h *Hash) Inspect() string {
+
+	pairs := []string{}
+
+	for _, v := range h.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s:%s, ", v.Key.Inspect(), v.Value.Inspect()))
+	}
+	var out bytes.Buffer
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
 	return out.String()
 }

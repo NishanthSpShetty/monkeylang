@@ -307,3 +307,37 @@ func TestArrayIndexExpressions(t *testing.T) {
 		}
 	}
 }
+
+func TestHashLiteral(t *testing.T) {
+	input := `let two = "two";
+{
+"one": 10 - 9,
+two: 1 + 1,
+"thr" + "ee": 6 / 2,
+4: 4,
+true: 5,
+false: 6
+}`
+	evaluated := testEval(input)
+	result, ok := evaluated.(*runtime.Hash)
+	assert.True(t, ok, "evaluated result is a hash")
+
+	expected := map[runtime.HashKey]int64{
+		(&runtime.String{Value: "one"}).HashKey():   1,
+		(&runtime.String{Value: "two"}).HashKey():   2,
+		(&runtime.String{Value: "three"}).HashKey(): 3,
+		(&runtime.Integer{Value: 4}).HashKey():      4,
+		runtime.True.HashKey():                      5,
+		runtime.False.HashKey():                     6,
+	}
+
+	assert.Equal(t, len(result.Pairs), len(expected), "must return expected number of pairs")
+
+	for ek, ev := range expected {
+		val, ok := result.Pairs[ek]
+		assert.True(t, ok, "must have a value in hash")
+
+		assert.Equal(t, ev, val, "value must match")
+	}
+
+}
