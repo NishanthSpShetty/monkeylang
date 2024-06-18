@@ -26,13 +26,15 @@ This will start monkey repl
 
 ## language
 
-• C-like syntax
-• variable bindings
-• integers and booleans
-• arithmetic expressions
-• built-in functions
-• first-class and higher-order functions
-• closures
+* C-like syntax
+* Dynamic typing
+* Variable bindings
+* Integers and booleans
+* Arithmetic expressions
+* Arrays and maps
+* Built-in functions
+* First-class and higher-order functions
+* Closures - TODO
 
 
 Sample snippets
@@ -63,6 +65,11 @@ let fullname = firstname + " " + lastname
 let ar = [1,2, "hello", 2/2, fn(x) { x* 2; }(3)]
 ar[2]
 len(ar)
+let a = {1:"1", 2:"2", 3:"3"};
+a[1]
+a[4]
+let map = {1:"one", 2:"two", 3:"three"}
+map[1]
 ```
 _all the above snippets are valid monkey lang, try executing them in a repl_
 
