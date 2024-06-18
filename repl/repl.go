@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/NishanthSpShetty/monkey/lexer"
@@ -81,6 +82,8 @@ func run(r *runtime.Runtime, out io.Writer, line string) {
 	switch cmd {
 	case "env":
 		r.PrintVars()
+	case "exit", "quit":
+		os.Exit(0)
 	default:
 
 		io.WriteString(out, MONKEY_FACE)

@@ -51,7 +51,7 @@ type Integer struct {
 }
 
 func (i *Integer) Inspect() string {
-	return fmt.Sprintf("%d::[%s]", i.Value, i.Type())
+	return fmt.Sprintf("%d", i.Value)
 }
 
 func (i *Integer) Type() ObjectType {
@@ -70,7 +70,7 @@ type Boolean struct {
 }
 
 func (b *Boolean) Inspect() string {
-	return fmt.Sprintf("%t::[%s]", b.Value, b.Type())
+	return fmt.Sprintf("%t", b.Value)
 }
 
 func (b *Boolean) Type() ObjectType {
@@ -153,9 +153,7 @@ type String struct {
 }
 
 func (s *String) Type() ObjectType { return ObjString }
-func (s *String) Inspect() string {
-	return fmt.Sprintf("%s::[%s]", s.Value, s.Type())
-}
+func (s *String) Inspect() string  { return s.Value }
 
 func (s *String) HashKey() HashKey {
 	h := fnv.New64a()
@@ -178,7 +176,7 @@ func (a *Array) Inspect() string {
 	}
 	out.WriteString("[")
 	out.WriteString(strings.Join(elements, ", "))
-	out.WriteString("]::[Array]")
+	out.WriteString("]")
 	return out.String()
 }
 

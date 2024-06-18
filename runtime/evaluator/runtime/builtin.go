@@ -1,5 +1,7 @@
 package runtime
 
+import "fmt"
+
 type Builtin struct {
 	Fn BuiltinFunction
 }
@@ -28,8 +30,21 @@ func fnLen() *Builtin {
 	}
 }
 
+func fnPuts() *Builtin {
+	return &Builtin{
+		Fn: func(args ...Object) Object {
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+			return Nil
+		},
+	}
+
+}
+
 var builtins = map[string]*Builtin{
-	"len": fnLen(),
+	"len":  fnLen(),
+	"puts": fnPuts(),
 }
 
 func GetBuiltin(name string) (*Builtin, bool) {
