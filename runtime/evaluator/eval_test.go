@@ -213,6 +213,10 @@ return 1;
 			"foobar",
 			"identifier not found: foobar",
 		},
+		{
+			`{"name": "Monkey"}[fn(x) { x }];`,
+			"unusable as hash key: Function",
+		},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
@@ -337,7 +341,53 @@ false: 6
 		val, ok := result.Pairs[ek]
 		assert.True(t, ok, "must have a value in hash")
 
-		assert.Equal(t, ev, val, "value must match")
+		testIntegerObject(t, val.Value, ev)
+	}
+
+}
+
+func TestHashIndexExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{
+			`{"foo": 5}["foo"]`,
+			5,
+		},
+		{
+			`{"foo": 5}["bar"]`,
+			nil,
+		},
+		{
+			`let key = "foo"; {"foo": 5}[key]`,
+			5,
+		},
+		{
+			`{}["foo"]`,
+			nil,
+		},
+		{
+			`{5: 5}[5]`,
+			5},
+		{
+			`{true: 5}[true]`,
+			5,
+		},
+		{
+			`{false: 5}[false]`,
+			5,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNilObject(t, evaluated)
+		}
 	}
 
 }

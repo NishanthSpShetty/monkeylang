@@ -348,8 +348,10 @@ func evaluateIndexExpression(left, idx runtime.Object) runtime.Object {
 
 	case left.Type() == runtime.ObjArray && idx.Type() == runtime.ObjInteger:
 		return evalArrayIndexExpression(left, idx)
+	case left.Type() == runtime.ObjHash:
+		return evalHashIndexExpression(left, idx)
 	default:
-		return runtime.NewError("index operator not suppoerted: %s", left.Type())
+		return runtime.NewError("index operator not supported: %s", left.Type())
 	}
 }
 
@@ -362,6 +364,20 @@ func evalArrayIndexExpression(left, idx runtime.Object) runtime.Object {
 		return runtime.Nil
 	}
 	return arr.Elements[i]
+}
+func evalHashIndexExpression(hash, idx runtime.Object) runtime.Object {
+	mp := hash.(*runtime.Hash)
+
+	index, ok := idx.(runtime.Hashtable)
+	if !ok {
+		return runtime.NewError("unusable as hash key: %s", idx.Type())
+	}
+
+	pairs, ok := mp.Pairs[index.HashKey()]
+	if !ok {
+		return runtime.Nil
+	}
+	return pairs.Value
 }
 
 func evalHashLiteral(r *runtime.Runtime, hl *ast.HashLiteral) runtime.Object {
