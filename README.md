@@ -73,6 +73,15 @@ map[1]
 ```
 _all the above snippets are valid monkey lang, try executing them in a repl_
 
+## REPL commands
+repl provides helper commands to inspect and more. They start with `:` (colon)
+1. `:env` Inspect environment
+
+    Prints out the variables, functions declared in the current environment
+2. `:exit` or `:quit`
+
+    Exit the repl
+
 
 ## Developement and Testing
 
