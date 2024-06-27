@@ -92,4 +92,4 @@ make test
 
 ## Reference
 
-This implementation is based on the Thorsten Ball Book. [Writing Interpreter In Go](https://edu.anarcho-copy.org/Programming%20Languages/Go/writing%20an%20INTERPRETER%20in%20go.pdf)
+This implementation is based on the Thorsten Ball Book. [Writing Interpreter In Go](https://interpreterbook.com/)
